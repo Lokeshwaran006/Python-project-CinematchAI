@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Catalog &amp; Filter Engine — CineMatch AI{% endblock %}
+
+{% block content %}
+<div class="discover-layout">
+
+  <!-- 280px Left Sidebar Filters matching page 3.jpg -->
+  <aside class="filters-sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="4" y1="21" x2="4" y2="14"></line>
+          <line x1="4" y1="10" x2="4" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12" y2="3"></line>
+          <line x1="20" y1="21" x2="20" y2="16"></line>
+          <line x1="20" y1="12" x2="20" y2="3"></line>
+          <line x1="1" y1="14" x2="7" y2="14"></line>
+          <line x1="9" y1="8" x2="15" y2="8"></line>
+          <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        <span>Filters</span>
+      </div>
+      <button class="reset-link-btn" onclick="resetAllCatalogFilters()">Reset</button>
+    </div>
+
+    <!-- Filter Group: Genre -->
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <label class="filter-label">Genre</label>
+        <span class="selected-count-badge" id="genreSelectedCount">2 selected</span>
+      </div>
+      <div class="checkbox-list" id="genreCheckboxList">
+        {% for g in all_genres %}
+        <label class="custom-checkbox-row">
+          <input type="checkbox" name="genreFilter" value="{{ g.slug }}" {% if g.slug in selected_genres %}checked{% endif %} onchange="applyFilters()">
+          <span class="checkbox-box"></span>
+          <span class="checkbox-title">{{ g.name }}</span>
+          <span class="checkbox-count">{{ g.count }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      <button class="show-all-genres-btn" onclick="toggleExtraGenres(this)">Show all genres +</button>
+    </div>
+
+    <!-- Filter Group: Release Year Dual-Thumb Range -->
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <label class="filter-label">Release year</label>
+      </div>
+      <div class="year-inputs-row">
+        <div class="year-box" id="yearMinBox">{{ year_min }}</div>
+        <div class="year-box" id="yearMaxBox">{{ year_max }}</div>
+      </div>
+      <div class="dual-range-wrapper">
+        <div class="range-track-bg"></div>
+        <div class="range-track-selected" id="rangeSelectedTrack"></div>
+        <input type="range" id="rangeMinInput" min="1950" max="2026" value="{{ year_min }}" step="1" oninput="handleDualYearMin(this.value)">
+        <input type="range" id="rangeMaxInput" min="1950" max="2026" value="{{ year_max }}" step="1" oninput="handleDualYearMax(this.value)">
+      </div>
+      <div class="slider-labels-row">
+        <span>1980</span>
+        <span>2026</span>
+      </div>
+    </div>
+
+    <!-- Filter Group: Rating Threshold -->
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <label class="filter-label">Rating threshold</label>
+      </div>
+      <div class="threshold-label-row">
+        <span class="threshold-title">Minimum Rating</span>
+        <span class="threshold-value" id="ratingThresholdDisplay">{{ '%.1f'|format(min_rating) }}+</span>
+      </div>
+      <div class="single-range-wrapper">
+        <input type="range" id="ratingThresholdSlider" min="0" max="10" step="0.5" value="{{ min_rating }}" oninput="handleRatingThreshold(this.value)">
+      </div>
+      <div class="slider-labels-row">
+        <span>0.0</span>
+        <span>10.0</span>
+      </div>
+    </div>
+
+    <!-- Filter Group: Language -->
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <label class="filter-label">Language</label>
+        <span class="selected-count-badge" id="langSelectedCount">1 selected</span>
+      </div>
+      <div class="language-select-box" onclick="toggleLangDropdown()">
+        <div class="lang-chips-container" id="langChipsContainer">
+          <span class="lang-tag" id="currentLangTag">English <span class="tag-remove" onclick="event.stopPropagation(); removeLangTag()">×</span></span>
+        </div>
+        <span class="lang-dropdown-arrow">▾</span>
+      </div>
+      <div class="lang-dropdown-options hidden" id="langOptionsDrawer">
+        <div class="lang-opt" onclick="selectCatalogLanguage('All')">All languages</div>
+        <div class="lang-opt" onclick="selectCatalogLanguage('English')">English</div>
+        <div class="lang-opt" onclick="selectCatalogLanguage('Spanish')">Spanish</div>
+        <div class="lang-opt" onclick="selectCatalogLanguage('Hindi')">Hindi</div>
+        <div class="lang-opt" onclick="selectCatalogLanguage('French')">French</div>
+        <div class="lang-opt" onclick="selectCatalogLanguage('Japanese')">Japanese</div>
+      </div>
+    </div>
+
+    <!-- Filter Group: Sort By Dropdown -->
+    <div class="filter-group">
+      <div class="filter-group-header">
+        <label class="filter-label">Sort by</label>
+      </div>
+      <div class="custom-sort-select" onclick="toggleSortDropdown()">
+        <span id="selectedSortLabel">{{ sort_by }}</span>
+        <span class="sort-arrow">▾</span>
+      </div>
+      <div class="sort-dropdown-options hidden" id="sortOptionsDrawer">
+        <div class="sort-opt active" onclick="selectSortOption('Highest Rated')">Highest Rated ✓</div>
+        <div class="sort-opt" onclick="selectSortOption('Highest Revenue')">Highest Revenue</div>
+        <div class="sort-opt" onclick="selectSortOption('Most Relevant')">Most Relevant</div>
+        <div class="sort-opt" onclick="selectSortOption('Release Date')">Release Date</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Catalog Content matching page 3.jpg -->
+  <main class="catalog-main">
+    
+    <!-- Top Header Banner -->
+    <div class="catalog-header">
+      <div class="catalog-header-left">
+        <div class="engine-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="4 17 10 11 4 5"></polyline>
+            <line x1="12" y1="19" x2="20" y2="19"></line>
+          </svg>
+          <span>THE DISCOVERY ENGINE</span>
+        </div>
+        <h1 class="catalog-title">Find your next great film.</h1>
+        <p class="catalog-subtitle">Less scrolling. More cinema. Refine the details and discover something worth watching.</p>
+      </div>
+
+      <div class="catalog-header-right">
+        <button class="btn btn-save-search" onclick="saveCurrentSearch()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Save search
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Filter Pills Bar matching page 3.jpg -->
+    <div class="active-filters-bar">
+      <div class="filter-pills-scroll" id="activeFilterPillsList">
+        <span class="active-filter-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="4" y1="6" x2="20" y2="6"></line>
+            <line x1="7" y1="12" x2="17" y2="12"></line>
+            <line x1="10" y1="18" x2="14" y2="18"></line>
+          </svg>
+        </span>
+        <span class="active-filter-pill" onclick="removeFilter('genre', 'Science Fiction')">Sci-Fi <span class="pill-x">×</span></span>
+        <span class="active-filter-pill" onclick="removeFilter('genre', 'Adventure')">Adventure <span class="pill-x">×</span></span>
+        <span class="active-filter-pill" onclick="removeFilter('year')">1980–2026 <span class="pill-x">×</span></span>
+        <span class="active-filter-pill" onclick="removeFilter('rating')">7.0+ <span class="pill-x">×</span></span>
+        <span class="active-filter-pill" onclick="removeFilter('lang')">English <span class="pill-x">×</span></span>
+        <button class="clear-all-link" onclick="resetAllCatalogFilters()">Clear all</button>
+      </div>
+
+      <div class="view-mode-toggle">
+        <button class="mode-btn active" id="gridViewBtn" onclick="setViewMode('grid')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7"></rect>
+            <rect x="14" y="3" width="7" height="7"></rect>
+            <rect x="14" y="14" width="7" height="7"></rect>
+            <rect x="3" y="14" width="7" height="7"></rect>
+          </svg>
+          Grid View
+        </button>
+        <button class="mode-btn" id="listViewBtn" onclick="setViewMode('list')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+          List View
+        </button>
+      </div>
+    </div>
+
+    <!-- Match Counter & Sort Label Row matching page 3.jpg -->
+    <div class="results-meta-bar">
+      <div class="match-count-text">
+        <strong id="matchCountNumber">128 movies</strong> match your filters
+      </div>
+      <div class="sort-status-text" id="sortStatusDisplay">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="4" y1="6" x2="16" y2="6"></line>
+          <line x1="8" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="18" x2="12" y2="18"></line>
+        </svg>
+        <span id="currentSortHeader">Highest rated first</span>
+      </div>
+    </div>
+
+    <!-- 4-Column Responsive Grid Area matching page 3.jpg -->
+    <div class="catalog-grid" id="catalogGrid">
+      <!-- Dynamically populated by app.js on load & filter changes -->
+      <div class="catalog-loading-placeholder">
+        <div class="spinner"></div>
+        <p>Loading curated cinema catalog...</p>
+      </div>
+    </div>
+
+    <!-- Pagination Bar matching bottom of page 3.jpg -->
+    <div class="catalog-pagination-bar">
+      <div class="pagination-info">
+        <span id="paginationShowingText">Showing 1–8 of 128 movies</span>
+        <span class="subnote">Revenue badges show estimated worldwide box office.</span>
+      </div>
+
+      <div class="pagination-controls" id="paginationControls">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    initCatalogEngine();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Partner Analytics Integration — CineMatch AI{% endblock %}
+
+{% block content %}
+<div class="partner-bridge-container">
+  
+  <!-- Header -->
+  <div class="bridge-header">
+    <div class="bridge-title-group">
+      <div class="bridge-pill">TWO-TIER INTERCONNECTED ARCHITECTURE</div>
+      <h1>Movie Analytics Dashboard &amp; CineMatch AI</h1>
+      <p class="bridge-desc">
+        Seamless bidirectional integration over a shared Cloud PostgreSQL database (<code>Supabase</code>).
+        Mutations in either system automatically trigger real-time ML vector updates and analytical re-aggregation.
+      </p>
+    </div>
+
+    <div class="bridge-actions">
+      <a href="{{ partner_url }}" target="_blank" rel="noopener" class="btn btn-primary btn-large">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+        Open Partner Dashboard in New Tab ↗
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Architecture Metrics Grid -->
+  <div class="bridge-metrics-grid">
+    <div class="metric-card">
+      <span class="metric-title">Shared Database</span>
+      <span class="metric-value">PostgreSQL</span>
+      <span class="metric-sub">Supabase Cloud Source of Truth</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-title">Real-Time ML Pipeline</span>
+      <span class="metric-value">TF-IDF &amp; Cosine</span>
+      <span class="metric-sub">Auto-triggered on mutations</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-title">Active Movie Context</span>
+      <span class="metric-value">{{ movie.title if movie else 'Global Catalog' }}</span>
+      <span class="metric-sub">{{ 'TMDB ID: ' ~ movie.id if movie else 'Catalog Level Analytics' }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-title">Data Exchange Endpoints</span>
+      <span class="metric-value">/api/analytics/*</span>
+      <span class="metric-sub">REST Summary &amp; Trends</span>
+    </div>
+  </div>
+
+  <!-- Interactive Analytics Live Explorer -->
+  <div class="bridge-explorer-panel">
+    <div class="explorer-header">
+      <div class="explorer-tabs">
+        <button class="tab-btn active" onclick="switchBridgeTab('trendsTab')">📊 Trends &amp; Decades (/api/analytics/trends)</button>
+        <button class="tab-btn" onclick="switchBridgeTab('summaryTab')">📈 Catalog Summary (/api/analytics/summary)</button>
+        <button class="tab-btn" onclick="switchBridgeTab('genresTab')">🎭 Genre Metrics (/api/analytics/genres)</button>
+        <button class="tab-btn" onclick="switchBridgeTab('frameTab')">🖥️ Embedded Partner View</button>
+      </div>
+      <button class="btn btn-outline small" onclick="refreshBridgeData()">↻ Fetch Live Data</button>
+    </div>
+
+    <div class="explorer-body">
+      <!-- TRENDS TAB -->
+      <div id="trendsTab" class="bridge-tab-view active">
+        <div class="chart-summary-row">
+          <div class="analytics-card">
+            <h3>Top 5 Worldwide Box Office Leaders</h3>
+            <div id="topRevenueList" class="stat-list">Loading live revenue data...</div>
+          </div>
+          <div class="analytics-card">
+            <h3>Releases by Decade</h3>
+            <div id="decadesList" class="stat-list">Loading live decade data...</div>
+          </div>
+        </div>
+        <div class="analytics-card full-width">
+          <h3>Top Genre Distribution in Shared Database</h3>
+          <div id="genreDistributionTags" class="genre-bars-container">Loading genre data...</div>
+        </div>
+      </div>
+
+      <!-- SUMMARY TAB -->
+      <div id="summaryTab" class="bridge-tab-view">
+        <pre class="json-code-block" id="summaryJsonOutput">Fetching /api/analytics/summary...</pre>
+      </div>
+
+      <!-- GENRES TAB -->
+      <div id="genresTab" class="bridge-tab-view">
+        <pre class="json-code-block" id="genresJsonOutput">Fetching /api/analytics/genres...</pre>
+      </div>
+
+      <!-- EMBEDDED DASHBOARD TAB -->
+      <div id="frameTab" class="bridge-tab-view">
+        <div class="iframe-container">
+          <p class="iframe-note">
+            Attempting to connect to Partner's Movie Analytics Dashboard at <code>{{ partner_url }}</code>.
+            If the partner server is not running locally on port 8001, you can launch it using:
+            <code>cd Movieanalyticsapplication &amp;&amp; uvicorn main:app --reload --port 8001</code>
+          </p>
+          <iframe src="{{ partner_url }}" class="partner-iframe" title="Movie Analytics Dashboard"></iframe>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    loadBridgeAnalytics();
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}My Watchlist — CineMatch AI{% endblock %}
+
+{% block content %}
+<div class="watchlist-page-container">
+  <div class="watchlist-header">
+    <div class="watchlist-title-group">
+      <span class="engine-badge">PERSONAL COLLECTION</span>
+      <h1>My Watchlist</h1>
+      <p class="subtitle">Movies you've saved for future screening. Powered by persistent PostgreSQL cloud storage.</p>
+    </div>
+    <div class="watchlist-actions">
+      <a href="/discover" class="btn btn-primary">+ Discover More Films</a>
+    </div>
+  </div>
+
+  {% if movies %}
+  <div class="catalog-grid" id="watchlistGrid">
+    {% for movie in movies %}
+    <div class="catalog-card" onclick="location.href='/movie/{{ movie.id }}'">
+      <div class="card-poster-wrap">
+        <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" data-title="{{ movie.title }}" data-year="{{ movie.year }}" data-genre="{{ movie.genres[0] if movie.genres else '' }}" onerror="handleImageError(this)">
+        <span class="card-star-badge">★ {{ '%.1f'|format(movie.vote_average) if movie.vote_average else '8.0' }}</span>
+        <button class="card-save-btn active" title="Remove from watchlist" onclick="event.stopPropagation(); toggleWatchlist({{ movie.id }}, this)">
+          <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+      </div>
+
+      <div class="card-details">
+        <h3 class="card-film-title">{{ movie.title }}</h3>
+        <div class="card-meta-line">
+          <span class="meta-year-lang">{{ movie.year or '' }}</span>
+          {% if movie.revenue_display %}
+            <span class="card-revenue-pill">{{ movie.revenue_display }}</span>
+          {% endif %}
+        </div>
+        <div class="card-genres-line">
+          {{ movie.genres[:2]|join(' · ') if movie.genres else 'Cinema' }}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-watchlist-box">
+    <div class="empty-icon">🎬</div>
+    <h3>Your Watchlist is empty</h3>
+    <p>Explore recommended films and click the bookmark icon on any card to save it here.</p>
+    <a href="/discover" class="btn btn-primary">Browse Film Catalog</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

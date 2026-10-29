@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CineMatch AI — Movie Recommendation and Discovery System{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  {% block head %}{% endblock %}
+</head>
+<body class="cinematic-theme">
+
+  <!-- Top Navigation Bar -->
+  <header class="top-nav">
+    <div class="nav-container">
+      <!-- Brand Logo -->
+      <a href="/" class="brand-logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="4" width="20" height="16" rx="4" fill="url(#logoGrad)"/>
+            <path d="M7 4v16M17 4v16M2 12h20M2 8h5M2 16h5M17 8h5M17 16h5" stroke="#FFFFFF" stroke-width="1.5"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#3B82F6"/>
+                <stop offset="100%" stop-color="#8B5CF6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">CineMatch</span>
+          <span class="brand-ai">AI</span>
+        </div>
+      </a>
+
+      <!-- Navigation Links -->
+      <nav class="nav-links">
+        <a href="/" class="nav-link {% if request.url.path == '/' %}active{% endif %}">Discover</a>
+        <a href="/discover" class="nav-link {% if request.url.path == '/discover' %}active{% endif %}">Catalog & Filters</a>
+        <a href="/watchlist" class="nav-link {% if request.url.path == '/watchlist' %}active{% endif %}">Watchlist</a>
+        <a href="/partner-analytics" class="nav-link partner-pill {% if 'partner-analytics' in request.url.path %}active{% endif %}">
+          <span class="pulse-dot"></span> Partner Analytics
+        </a>
+      </nav>
+
+      <!-- Search Bar with Category Dropdowns -->
+      <div class="nav-search-bar">
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="globalSearchInput" placeholder="Search movies, directors, moods..." autocomplete="off">
+          <div class="quick-dropdowns">
+            <div class="nav-dropdown-wrapper">
+              <div class="dropdown-chip" id="navGenreBtn" onclick="toggleNavDropdown('navGenreMenu', event)">Genre <span class="arrow">▾</span></div>
+              <div id="navGenreMenu" class="nav-dropdown-menu hidden">
+                <div class="nav-dropdown-header">Filter by Genre</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Science Fiction')">Science Fiction</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Action')">Action</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Adventure')">Adventure</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Drama')">Drama</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Horror')">Horror</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Comedy')">Comedy</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Thriller')">Thriller</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Crime')">Crime</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Mystery')">Mystery</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('genre', 'Animation')">Animation</div>
+              </div>
+            </div>
+
+            <div class="nav-dropdown-wrapper">
+              <div class="dropdown-chip" id="navLangBtn" onclick="toggleNavDropdown('navLangMenu', event)">Language <span class="arrow">▾</span></div>
+              <div id="navLangMenu" class="nav-dropdown-menu hidden">
+                <div class="nav-dropdown-header">Filter by Language</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('lang', 'English')">English</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('lang', 'Spanish')">Spanish (Español)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('lang', 'Hindi')">Hindi (हिंदी)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('lang', 'French')">French (Français)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('lang', 'Japanese')">Japanese (日本語)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('lang', 'German')">German (Deutsch)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('lang', 'Italian')">Italian (Italiano)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('lang', 'Korean')">Korean (한국어)</div>
+              </div>
+            </div>
+
+            <div class="nav-dropdown-wrapper">
+              <div class="dropdown-chip" id="navYearBtn" onclick="toggleNavDropdown('navYearMenu', event)">Year <span class="arrow">▾</span></div>
+              <div id="navYearMenu" class="nav-dropdown-menu hidden">
+                <div class="nav-dropdown-header">Filter by Era</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('decade', '2020s')">2020s (2020–2026)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('decade', '2010s')">2010s (2010–2019)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('decade', '2000s')">2000s (2000–2009)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('decade', '1990s')">1990s (1990–1999)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('decade', '1980s')">1980s (1980–1989)</div>
+                <div class="nav-dropdown-item" onclick="selectNavFilter('decade', 'Classics')">Classics (Pre-1980)</div>
+              </div>
+            </div>
+          </div>
+          <span class="shortcut-key">⌘ K</span>
+        </div>
+        <!-- Live autocomplete search drawer -->
+        <div id="searchAutoCompleteDrawer" class="search-drawer hidden"></div>
+      </div>
+
+      <!-- Right Nav Actions -->
+      <div class="nav-actions">
+        <!-- Re-index Quick Trigger -->
+        <button class="nav-action-btn" title="Rebuild Recommendation Engine Matrix" onclick="triggerReindex()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-on-hover">
+            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span class="btn-label">Re-Index</span>
+        </button>
+
+        <!-- Partner CRUD Management Modal Trigger -->
+        <button class="nav-action-btn" title="Open Partner CRUD / Data Console" onclick="openCrudModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+          <span class="btn-label">Data Console</span>
+        </button>
+
+        <!-- Watchlist Button with Counter -->
+        <a href="/watchlist" class="nav-action-btn watchlist-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="btn-label">Watchlist</span>
+          <span class="watchlist-badge" id="navWatchlistBadge">{{ watchlist_count or 0 }}</span>
+        </a>
+
+        <!-- User Profile Avatar -->
+        <div class="user-avatar" title="Signed in as Lokeshwaran (AK)">AK</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="page-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Live Data Management Modal (Partner CRUD Console) -->
+  <div id="crudModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <div class="modal-badge">SHARED DATA LAYER</div>
+          <h2>Partner CRUD &amp; Live Data Console</h2>
+          <p class="modal-subtitle">Mutations persist directly to the shared PostgreSQL database (<code>Supabase</code>) and trigger real-time ML re-indexing.</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeCrudModal()">&times;</button>
+      </div>
+
+      <!-- Tab Switcher -->
+      <div class="modal-tabs">
+        <button class="tab-btn active" onclick="switchModalTab('createTab')">➕ Add Movie (POST)</button>
+        <button class="tab-btn" onclick="switchModalTab('updateTab')">✏️ Edit Movie (PUT)</button>
+        <button class="tab-btn" onclick="switchModalTab('deleteTab')">🗑️ Delete (DELETE)</button>
+        <button class="tab-btn" onclick="switchModalTab('reindexTab')">⚡ Re-Index Pipeline</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- CREATE TAB -->
+        <div id="createTab" class="modal-tab-content active">
+          <form id="createMovieForm" onsubmit="handleCreateMovie(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Movie ID (TMDB Unique ID) *</label>
+                <input type="number" id="newMovieId" placeholder="e.g. 998877" required>
+              </div>
+              <div class="form-group">
+                <label>Movie Title *</label>
+                <input type="text" id="newMovieTitle" placeholder="e.g. Quantum Paradox" required>
+              </div>
+              <div class="form-group full-width">
+                <label>Overview / Synopsis</label>
+                <textarea id="newMovieOverview" rows="3" placeholder="Brief storyline for content-based vectorization..."></textarea>
+              </div>
+              <div class="form-group">
+                <label>Director</label>
+                <input type="text" id="newMovieDirector" placeholder="e.g. Christopher Nolan">
+              </div>
+              <div class="form-group">
+                <label>Genres (comma-separated)</label>
+                <input type="text" id="newMovieGenres" placeholder="Science Fiction, Adventure, Thriller">
+              </div>
+              <div class="form-group">
+                <label>Release Date</label>
+                <input type="date" id="newMovieDate" value="2026-05-15">
+              </div>
+              <div class="form-group">
+                <label>Initial Rating (0.0 - 10.0)</label>
+                <input type="number" step="0.1" min="0" max="10" id="newMovieRating" value="8.5">
+              </div>
+              <div class="form-group">
+                <label>Budget (USD)</label>
+                <input type="number" id="newMovieBudget" placeholder="150000000">
+              </div>
+              <div class="form-group">
+                <label>Revenue (USD)</label>
+                <input type="number" id="newMovieRevenue" placeholder="650000000">
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="submit" class="btn btn-primary">Create Movie Record</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- UPDATE TAB -->
+        <div id="updateTab" class="modal-tab-content">
+          <form id="updateMovieForm" onsubmit="handleUpdateMovie(event)">
+            <div class="form-grid">
+              <div class="form-group">
+                <label>Target Movie ID *</label>
+                <input type="number" id="updateMovieId" placeholder="e.g. 157336 (Interstellar)" required>
+              </div>
+              <div class="form-group">
+                <label>Updated Title</label>
+                <input type="text" id="updateMovieTitle" placeholder="Leave blank to keep unchanged">
+              </div>
+              <div class="form-group">
+                <label>Updated Rating (0.0 - 10.0)</label>
+                <input type="number" step="0.1" min="0" max="10" id="updateMovieRating" placeholder="e.g. 9.5">
+              </div>
+              <div class="form-group">
+                <label>Updated Revenue ($)</label>
+                <input type="number" id="updateMovieRevenue" placeholder="e.g. 731000000">
+              </div>
+              <div class="form-group full-width">
+                <label>Updated Overview</label>
+                <textarea id="updateMovieOverview" rows="2" placeholder="Leave blank to keep unchanged"></textarea>
+              </div>
+            </div>
+            <div class="modal-actions">
+              <button type="submit" class="btn btn-primary">Update Movie Record</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- DELETE TAB -->
+        <div id="deleteTab" class="modal-tab-content">
+          <form id="deleteMovieForm" onsubmit="handleDeleteMovie(event)">
+            <p class="warning-text">⚠️ Deleting a movie removes it from the shared PostgreSQL database and invalidates its ML recommendation vector.</p>
+            <div class="form-group">
+              <label>Movie ID to Remove *</label>
+              <input type="number" id="deleteMovieId" placeholder="e.g. 998877" required>
+            </div>
+            <div class="modal-actions">
+              <button type="submit" class="btn btn-danger">Delete Movie Record</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- RE-INDEX TAB -->
+        <div id="reindexTab" class="modal-tab-content">
+          <div class="reindex-box">
+            <h3>Automated Vector Re-Indexing</h3>
+            <p>Runs Scikit-Learn <code>TfidfVectorizer</code> and recalculates the Cosine Similarity matrix on all movie records in the shared database.</p>
+            <button class="btn btn-primary btn-large" onclick="triggerReindex()">⚡ Run Re-Index Pipeline Now</button>
+            <div id="reindexStatusOutput" class="reindex-output hidden"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- Footer strictly matching bottom of page 1.jpg -->
+  <footer class="cinematic-footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <div class="brand-logo">
+          <div class="logo-icon small">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="4" width="20" height="16" rx="4" fill="#3B82F6"/>
+              <path d="M7 4v16M17 4v16M2 12h20M2 8h5M2 16h5M17 8h5M17 16h5" stroke="#FFFFFF" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <span class="brand-name">CineMatch AI</span>
+        </div>
+        <p class="footer-tagline">Your taste. Our intelligence. Your next great film.</p>
+        <p class="footer-copy">&copy; 2026 CineMatch AI. Made for the love of cinema.</p>
+      </div>
+
+      <div class="footer-links">
+        <a href="#about" onclick="showAboutModal()">About</a>
+        <a href="#how-it-works" onclick="showHowItWorksModal()">How it works</a>
+        <a href="/partner-analytics">Partner Analytics</a>
+        <a href="#privacy">Privacy</a>
+        <a href="#contact">Contact</a>
+      </div>
+
+      <div class="footer-tech">
+        <span class="powered-by">POWERED BY CURIOSITY &amp; CODE</span>
+        <div class="tech-badges">
+          <span class="tech-badge">&lt;/&gt; Python</span>
+          <span class="tech-badge">⚙ Scikit-Learn</span>
+          <span class="tech-badge">🗄 TMDB Dataset</span>
+        </div>
+        <span class="attribution">Movie data &amp; images via <a href="https://www.themoviedb.org" target="_blank" rel="noopener">TMDB</a></span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/static/js/app.js?v=20261029_0345"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

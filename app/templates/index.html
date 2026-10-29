@@ -1,0 +1,303 @@
+{% extends "base.html" %}
+
+{% block title %}CineMatch AI — Discover Your Next Great Film{% endblock %}
+
+{% block content %}
+<div class="home-container">
+
+  <!-- 1. Hero Carousel Banner matching page 1.jpg -->
+  <section class="hero-banner" id="heroBanner" style="background-image: linear-gradient(180deg, rgba(7, 10, 16, 0.4) 0%, rgba(7, 10, 16, 0.95) 100%), url('{{ hero_backdrop }}');">
+    <div class="hero-overlay-glow"></div>
+    <div class="hero-content">
+      <div class="hero-trending-badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+          <polyline points="17 6 23 6 23 12"></polyline>
+        </svg>
+        <span>TRENDING THIS WEEK</span>
+      </div>
+
+      <p class="hero-subtagline">Go beyond what you know.</p>
+      <h1 class="hero-title" id="heroTitle">{{ hero.title if hero else 'Interstellar' }}</h1>
+
+      <div class="hero-meta-row">
+        <span class="badge badge-gold">
+          <span class="star-icon">★</span> 9.4 <span class="badge-sub">IMDb / User</span>
+        </span>
+        <span class="meta-dot">•</span>
+        <span class="meta-text" id="heroYear">{{ hero.year if hero else '2014' }}</span>
+        <span class="meta-dot">•</span>
+        <span class="meta-text" id="heroRuntime">2h 49m</span>
+        <span class="meta-dot">•</span>
+        <span class="badge badge-outline">PG-13</span>
+      </div>
+
+      <div class="hero-genre-tags" id="heroGenres">
+        {% if hero and hero.genres %}
+          {% for g in hero.genres[:3] %}
+            <span class="hero-genre-pill">{{ g }}</span>
+          {% endfor %}
+        {% else %}
+          <span class="hero-genre-pill">Sci-Fi</span>
+          <span class="hero-genre-pill">Adventure</span>
+          <span class="hero-genre-pill">Drama</span>
+        {% endif %}
+      </div>
+
+      <p class="hero-synopsis" id="heroSynopsis">
+        {{ hero.overview if hero and hero.overview else 'A team of explorers travels beyond this galaxy to discover whether mankind has a future among the stars.' }}
+      </p>
+
+      <div class="hero-cta-group">
+        <button class="btn btn-trailer" onclick="openTrailerModal('{{ hero.title if hero else 'Interstellar' }}')">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Watch Trailer
+        </button>
+
+        <a href="/movie/{{ hero.id if hero else 157336 }}" class="btn btn-similar glow-effect">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+          </svg>
+          Get Similar Movies
+        </a>
+      </div>
+    </div>
+
+    <!-- Hero Carousel Footer Controls -->
+    <div class="hero-controls">
+      <div class="carousel-indicators">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="carousel-counter">01 / 04</span>
+      </div>
+      <div class="carousel-creator-nav">
+        <span class="creator-label">A film by Christopher Nolan</span>
+        <button class="arrow-btn" onclick="prevHeroSlide()">&lt;</button>
+        <button class="arrow-btn" onclick="nextHeroSlide()">&gt;</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. "Recommended For You" Horizontal Rail matching page 1.jpg -->
+  <section class="section-row">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <div class="title-with-pill">
+          <h2>Recommended For You</h2>
+          <span class="pill-badge pill-violet">AI PICKS</span>
+        </div>
+        <p class="section-subtitle">A little science. A lot of great cinema. Curated around your taste.</p>
+      </div>
+      <div class="section-nav">
+        <a href="/discover" class="view-all-link">View all</a>
+        <div class="scroll-arrows">
+          <button class="arrow-btn" onclick="scrollRail('recommendedRail', -400)">&lt;</button>
+          <button class="arrow-btn" onclick="scrollRail('recommendedRail', 400)">&gt;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-rail" id="recommendedRail">
+      {% for movie in recommended_movies %}
+      <div class="movie-card" onclick="location.href='/movie/{{ movie.id }}'">
+        <div class="card-media">
+          <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" loading="lazy" data-title="{{ movie.title }}" data-year="{{ movie.year }}" data-genre="{{ movie.genres[0] if movie.genres else '' }}" onerror="handleImageError(this)">
+          
+          <!-- Match Percentage Badge top-left -->
+          <div class="match-badge">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>
+            <span>{{ movie.match_percentage }}% Match</span>
+          </div>
+
+          <!-- Bottom Card Controls -->
+          <div class="card-bottom-bar">
+            <span class="card-rating">★ {{ '%.1f'|format(movie.vote_average) if movie.vote_average else '8.5' }}</span>
+            <button class="bookmark-btn {% if movie.is_in_watchlist %}active{% endif %}" onclick="event.stopPropagation(); toggleWatchlist({{ movie.id }}, this)">
+              <svg viewBox="0 0 24 24" fill="{% if movie.is_in_watchlist %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-info">
+          <h3 class="card-title">{{ movie.title }}</h3>
+          <p class="card-meta">
+            {{ movie.year or '' }}
+            {% if movie.genres %}
+              • {{ movie.genres[:2]|join(' · ') }}
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- 3. Quick Filter Bar ("Find your next favorite") matching page 1.jpg -->
+  <section class="quick-filter-bar">
+    <div class="filter-bar-header">
+      <div class="filter-icon-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="4" y1="21" x2="4" y2="14"></line>
+          <line x1="4" y1="10" x2="4" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12" y2="3"></line>
+          <line x1="20" y1="21" x2="20" y2="16"></line>
+          <line x1="20" y1="12" x2="20" y2="3"></line>
+          <line x1="1" y1="14" x2="7" y2="14"></line>
+          <line x1="9" y1="8" x2="15" y2="8"></line>
+          <line x1="17" y1="16" x2="23" y2="16"></line>
+        </svg>
+        <div class="filter-header-text">
+          <h3>Find your next favorite</h3>
+          <p>Fine-tune your discovery.</p>
+        </div>
+      </div>
+      <button class="reset-filters-btn" onclick="resetQuickFilters()">Reset filters</button>
+    </div>
+
+    <div class="filter-rows">
+      <!-- Genre Row -->
+      <div class="filter-row">
+        <span class="filter-row-label">Genre</span>
+        <div class="filter-pills-group" id="genreFilterPills">
+          <button class="pill-btn" onclick="selectQuickFilter('genre', 'all', this)">All genres</button>
+          <button class="pill-btn active" onclick="selectQuickFilter('genre', 'Science Fiction', this)">✓ Sci-Fi</button>
+          <button class="pill-btn" onclick="selectQuickFilter('genre', 'Action', this)">Action</button>
+          <button class="pill-btn" onclick="selectQuickFilter('genre', 'Drama', this)">Drama</button>
+          <button class="pill-btn" onclick="selectQuickFilter('genre', 'Horror', this)">Horror</button>
+        </div>
+      </div>
+
+      <!-- Language Row -->
+      <div class="filter-row">
+        <span class="filter-row-label">Language</span>
+        <div class="filter-pills-group" id="langFilterPills">
+          <button class="pill-btn active" onclick="selectQuickFilter('lang', 'all', this)">All languages</button>
+          <button class="pill-btn" onclick="selectQuickFilter('lang', 'English', this)">English</button>
+          <button class="pill-btn" onclick="selectQuickFilter('lang', 'Spanish', this)">Spanish</button>
+          <button class="pill-btn" onclick="selectQuickFilter('lang', 'Hindi', this)">Hindi</button>
+          <button class="pill-btn" onclick="selectQuickFilter('lang', 'French', this)">French</button>
+          <button class="pill-btn" onclick="selectQuickFilter('lang', 'Japanese', this)">Japanese</button>
+        </div>
+      </div>
+
+      <!-- Decades Row -->
+      <div class="filter-row">
+        <span class="filter-row-label">Decades</span>
+        <div class="filter-pills-group" id="decadeFilterPills">
+          <button class="pill-btn active" onclick="selectQuickFilter('decade', 'all', this)">Any decade</button>
+          <button class="pill-btn" onclick="selectQuickFilter('decade', '2020s', this)">2020s</button>
+          <button class="pill-btn" onclick="selectQuickFilter('decade', '2010s', this)">2010s</button>
+          <button class="pill-btn" onclick="selectQuickFilter('decade', 'Classics', this)">Classics</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. "Top Rated Movies of All Time" Row matching page 1.jpg -->
+  <section class="section-row">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <h2>Top Rated Movies of All Time</h2>
+        <p class="section-subtitle">The unforgettable. The unmissable. The ones that stay with you.</p>
+      </div>
+      <div class="section-nav">
+        <a href="/discover?sort_by=Highest+Rated&min_rating=8.0" class="view-all-link">Explore the top 100</a>
+        <div class="scroll-arrows">
+          <button class="arrow-btn" onclick="scrollRail('topRatedRail', -400)">&lt;</button>
+          <button class="arrow-btn" onclick="scrollRail('topRatedRail', 400)">&gt;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cards-rail" id="topRatedRail">
+      {% for movie in top_rated_movies %}
+      <div class="movie-card" onclick="location.href='/movie/{{ movie.id }}'">
+        <div class="card-media">
+          <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" loading="lazy" data-title="{{ movie.title }}" data-year="{{ movie.year }}" data-genre="{{ movie.genres[0] if movie.genres else '' }}" onerror="handleImageError(this)">
+          
+          <!-- Rank Tag top-left (#1, #2, #3, ...) -->
+          <div class="rank-tag">#{{ movie.rank }}</div>
+
+          <div class="card-bottom-bar">
+            <span class="card-rating">★ {{ '%.1f'|format(movie.vote_average) if movie.vote_average else '9.0' }}</span>
+            <button class="bookmark-btn {% if movie.is_in_watchlist %}active{% endif %}" onclick="event.stopPropagation(); toggleWatchlist({{ movie.id }}, this)">
+              <svg viewBox="0 0 24 24" fill="{% if movie.is_in_watchlist %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-info">
+          <h3 class="card-title">{{ movie.title }}</h3>
+          <p class="card-meta">
+            {{ movie.year or '' }}
+            {% if movie.genres %}
+              • {{ movie.genres[:2]|join(' · ') }}
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- 5. "Discover by Language" Grid matching page 1.jpg -->
+  <section class="section-row">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <h2>Discover by Language</h2>
+        <p class="section-subtitle">Great stories don't need a passport. Explore cinema without borders.</p>
+      </div>
+      <div class="section-nav">
+        <a href="/discover" class="view-all-link">All languages</a>
+        <div class="scroll-arrows">
+          <button class="arrow-btn" onclick="scrollRail('langGrid', -300)">&lt;</button>
+          <button class="arrow-btn" onclick="scrollRail('langGrid', 300)">&gt;</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="language-cards-grid" id="langGrid">
+      {% for lang in language_cards %}
+      <div class="lang-card" style="background: linear-gradient(135deg, {{ lang.bg_color }} 0%, #070A10 100%);" onclick="location.href='/discover?language={{ lang.code }}'">
+        <div class="lang-card-content">
+          <span class="lang-subtitle">{{ lang.subtitle }}</span>
+          <h3 class="lang-name">{{ lang.name }}</h3>
+          <span class="lang-count">{{ lang.count }}</span>
+        </div>
+        <div class="lang-card-arrow">↗</div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+</div>
+
+<!-- Trailer Modal -->
+<div id="trailerModal" class="modal-backdrop hidden">
+  <div class="trailer-modal-content">
+    <div class="trailer-modal-header">
+      <h3 id="trailerModalTitle" class="trailer-modal-title">Movie Trailer</h3>
+      <div class="trailer-header-actions">
+        <a id="trailerExternalLink" href="#" target="_blank" rel="noopener" class="trailer-ext-btn">
+          Watch on YouTube ↗
+        </a>
+        <button class="modal-close-btn" onclick="closeTrailerModal()">&times;</button>
+      </div>
+    </div>
+    <div class="video-container" id="videoContainer">
+      <iframe id="trailerIframe" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+{% endblock %}

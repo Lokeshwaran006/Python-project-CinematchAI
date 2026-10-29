@@ -1,0 +1,414 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} — CineMatch AI{% endblock %}
+
+{% block content %}
+<div class="detail-page-container">
+
+  <!-- Breadcrumbs matching page 2.jpg -->
+  <div class="breadcrumbs-bar">
+    <a href="/discover" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Back to Discover
+    </a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">{{ movie.title }}</span>
+  </div>
+
+  <!-- Hero Movie Header matching page 2.jpg -->
+  <section class="detail-hero-section" style="background-image: linear-gradient(180deg, rgba(7, 10, 16, 0.75) 0%, rgba(7, 10, 16, 0.98) 100%), url('{{ backdrop_url }}');">
+    <div class="detail-hero-backdrop-glow"></div>
+    <div class="detail-hero-grid">
+      
+      <!-- Left: Poster with Match Badge -->
+      <div class="detail-poster-col">
+        <div class="detail-poster-frame">
+          <img src="{{ poster_url }}" alt="{{ movie.title }}" data-title="{{ movie.title }}" data-year="{{ movie.year }}" data-genre="{{ movie.genres[0] if movie.genres else '' }}" onerror="handleImageError(this)">
+        </div>
+        <div class="match-pill-footer">
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+          </svg>
+          <span>98% match for you</span>
+        </div>
+      </div>
+
+      <!-- Right: Detailed Information -->
+      <div class="detail-info-col">
+        {% if movie.tagline %}
+          <p class="movie-tagline">{{ movie.tagline|upper }}</p>
+        {% else %}
+          <p class="movie-tagline">BEYOND SPACE. BEYOND TIME.</p>
+        {% endif %}
+
+        <h1 class="detail-title">{{ movie.title }}</h1>
+
+        <!-- Metadata Row (Year, Runtime, Age Rating, Genre Chips) -->
+        <div class="detail-chips-row">
+          <span class="detail-chip">{{ movie.year or '2014' }}</span>
+          <span class="detail-dot">•</span>
+          <span class="detail-chip">{{ runtime_display }}</span>
+          <span class="detail-dot">•</span>
+          <span class="detail-chip chip-outline">PG-13</span>
+          {% for g in movie_genres %}
+            <span class="detail-chip chip-genre">{{ g }}</span>
+          {% endfor %}
+        </div>
+
+        <!-- Rating Scores Row (IMDb, Rotten Tomatoes, Language) -->
+        <div class="detail-scores-row">
+          <div class="score-badge imdb-score">
+            <span class="score-source">IMDb</span>
+            <span class="score-val">{{ vote_average_display }}</span>
+            <span class="score-scale">/ 10</span>
+          </div>
+
+          <div class="score-badge rt-score">
+            <span class="rt-icon">🍅</span>
+            <span class="score-val">{{ rt_score }}%</span>
+            <span class="score-source">Rotten Tomatoes</span>
+          </div>
+
+          <div class="score-badge lang-badge">
+            <span>{{ movie.original_language|upper if movie.original_language else 'EN' }} · Original language</span>
+          </div>
+        </div>
+
+        <!-- Overview -->
+        <p class="detail-overview">
+          {{ movie.overview if movie.overview else 'No synopsis available for this title.' }}
+        </p>
+
+        <!-- Director & Starring Chips -->
+        <div class="credits-block">
+          {% if movie.director %}
+          <div class="credit-row">
+            <span class="credit-label">Director</span>
+            <span class="credit-value director-name">{{ movie.director }}</span>
+          </div>
+          {% endif %}
+
+          <div class="credit-row">
+            <span class="credit-label">Starring</span>
+            <div class="cast-chips-wrap">
+              {% for actor in starring %}
+                <span class="actor-chip">{{ actor }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="detail-actions-row">
+          <button class="btn btn-primary btn-play" onclick="openTrailerModal('{{ movie.title }}')">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            Watch trailer
+          </button>
+
+          <button class="btn btn-outline {% if is_in_watchlist %}in-watchlist{% endif %}" id="detailWatchlistBtn" onclick="toggleWatchlist({{ movie.id }}, this)">
+            <svg viewBox="0 0 24 24" fill="{% if is_in_watchlist %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span id="detailWatchlistText">{% if is_in_watchlist %}✓ In watchlist{% else %}+ Add to watchlist{% endif %}</span>
+          </button>
+
+          <button class="btn btn-icon-only" title="Share movie" onclick="shareMovie('{{ movie.title }}')">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+          </button>
+
+          <!-- Inter-Application Linkage: View Deep Analytics Button -->
+          <a href="/partner-analytics?movie_id={{ movie.id }}" class="btn btn-analytics-link" title="Analyze trends, financials and demographics for {{ movie.title }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>View Deep Analytics</span>
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- "Why this was recommended" Highlight Widget matching page 2.jpg -->
+  <section class="why-recommended-card">
+    <div class="why-rec-main">
+      <div class="why-rec-header">
+        <div class="why-icon-title">
+          <div class="sparkle-circle">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+            </svg>
+          </div>
+          <div>
+            <h3>Why this was recommended</h3>
+            <p class="why-subtitle">Big ideas. Immersive worlds. This one connects the dots in your movie taste.</p>
+          </div>
+        </div>
+        <span class="engine-tag">CINEMATCH ENGINE</span>
+      </div>
+
+      <div class="rationale-tags-row">
+        {% if movie_genres %}
+          <span class="rationale-pill">Matches your preference for {{ movie_genres[0] }}</span>
+        {% endif %}
+        {% if movie.vote_average %}
+          <span class="rationale-pill">High IMDb Score · {{ vote_average_display }}/10</span>
+        {% endif %}
+        {% if movie.director %}
+          <span class="rationale-pill">{{ movie.director }}</span>
+        {% endif %}
+      </div>
+
+      <p class="rationale-footer-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+          <line x1="9" y1="9" x2="9.01" y2="9"></line>
+          <line x1="15" y1="9" x2="15.01" y2="9"></line>
+        </svg>
+        Based on your love for Inception and The Martian, plus your recent ratings.
+      </p>
+    </div>
+
+    <!-- Match Percentage Box -->
+    <div class="why-rec-metric">
+      <div class="metric-score">98%</div>
+      <span class="metric-label">Taste match</span>
+      <div class="metric-bar"><div class="metric-progress" style="width: 98%;"></div></div>
+    </div>
+  </section>
+
+  <!-- "More Like This" 4x2 Grid Section matching page 2.jpg -->
+  <section class="section-row more-like-this-section">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <h2>More Like This</h2>
+        <p class="section-subtitle">New worlds. Familiar feelings. Your next great watch starts here.</p>
+      </div>
+      <div class="sort-tag">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="4" y1="6" x2="16" y2="6"></line>
+          <line x1="8" y1="12" x2="20" y2="12"></line>
+          <line x1="4" y1="18" x2="12" y2="18"></line>
+        </svg>
+        <span>Sorted by taste match</span>
+      </div>
+    </div>
+
+    <div class="more-like-grid">
+      {% for rec in recommendations %}
+      <div class="rec-card" onclick="location.href='/movie/{{ rec.id }}'">
+        <div class="rec-media">
+          <img src="{{ rec.poster_url }}" alt="{{ rec.title }}" loading="lazy" data-title="{{ rec.title }}" data-year="{{ rec.year }}" data-genre="{{ rec.genres[0] if rec.genres else '' }}" onerror="handleImageError(this)">
+          
+          <!-- Match Badge top-left -->
+          <div class="match-badge">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
+            </svg>
+            <span>{{ rec.match_percentage }}% match</span>
+          </div>
+
+          <!-- Hover Overlay with "Find Similar" Button -->
+          <div class="rec-hover-overlay">
+            <button class="btn btn-similar-hover" onclick="event.stopPropagation(); location.href='/movie/{{ rec.id }}'">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4"></path>
+              </svg>
+              <span>Find Similar</span>
+            </button>
+            <span class="hover-subtext">Explore movies like this</span>
+          </div>
+        </div>
+
+        <div class="rec-info">
+          <div class="rec-title-row">
+            <h4 class="rec-title">{{ rec.title }}</h4>
+            <span class="rec-year">{{ rec.year or '' }}</span>
+          </div>
+          <div class="rec-meta-row">
+            <span class="rec-genre">{{ rec.genres[:2]|join(' · ') if rec.genres else 'Cinema' }}</span>
+            <span class="rec-rating">☆ {{ '%.1f'|format(rec.vote_average) if rec.vote_average else '8.0' }}</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="rec-disclaimer">
+      ☆ Community ratings out of 10. Match scores are personalized to your taste.
+    </div>
+  </section>
+
+  <!-- Interactive Feedback Box ("Your taste makes it smarter.") matching page 2.jpg -->
+  <section class="feedback-section">
+    <div class="feedback-header">
+      <h2>Your taste makes it smarter.</h2>
+      <p>Rate {{ movie.title }} and help us find more movies you'll love.</p>
+    </div>
+
+    <div class="feedback-card-grid">
+      <!-- Left Panel: Rating Slider & Star Row -->
+      <div class="feedback-panel left-panel">
+        <div class="panel-header">
+          <span class="panel-label">Your rating</span>
+          <span class="save-status-tag" id="ratingSaveStatus">{{ 'Saved' if user_review else 'Not saved yet' }}</span>
+        </div>
+
+        <div class="score-display-wrap">
+          <div class="large-score"><span id="scoreNumber">{{ user_rating_val }}</span><span class="denom"> / 10</span></div>
+          <span class="score-verbal" id="scoreVerbal">Excellent</span>
+        </div>
+
+        <!-- 10 Stars Row -->
+        <div class="stars-row" id="starsRow">
+          {% for i in range(1, 11) %}
+            <span class="star-item {% if (user_review and user_review.rating >= i) or (not user_review and i <= 9) %}filled{% endif %}" data-val="{{ i }}" onclick="setRatingVal({{ i }})">★</span>
+          {% endfor %}
+        </div>
+
+        <!-- Smooth Slider -->
+        <div class="slider-wrap">
+          <input type="range" id="ratingSlider" min="1" max="10" step="1" value="{{ user_rating_val }}" oninput="handleSliderChange(this.value)">
+          <div class="slider-extremes">
+            <span>1 - Not for me</span>
+            <span>10 - All-time favorite</span>
+          </div>
+        </div>
+
+        <!-- Info callout -->
+        <div class="retune-callout">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <p>Every rating re-tunes your recommendations. More you, less guesswork.</p>
+        </div>
+      </div>
+
+      <!-- Right Panel: Written Review & Spoilers -->
+      <div class="feedback-panel right-panel">
+        <div class="panel-header">
+          <span class="panel-label">Your review</span>
+          <span class="optional-tag">Public Comment</span>
+        </div>
+
+        <!-- Reviewer Name Input -->
+        <div class="reviewer-name-field" style="margin-bottom: 12px;">
+          <label for="reviewerNameInput" style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; color: #94A3B8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+            <span>Your Name / Critic Handle <span style="color: #F43F5E;">*</span></span>
+            <span style="font-size: 11px; color: #64748B; font-weight: 400; text-transform: none;">Required for community feed</span>
+          </label>
+          <input type="text" id="reviewerNameInput" maxlength="60" required placeholder="Enter your name (e.g. Captain Jack Sparrow)" value="{{ user_review.author_name if (user_review and user_review.author_name and user_review.author_name != 'Anonymous Cinephile') else '' }}" style="width: 100%; padding: 10px 14px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 8px; color: #FFFFFF; font-size: 14px; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s;" onfocus="this.style.borderColor='#6366F1'" onblur="this.style.borderColor='rgba(255,255,255,0.12)'">
+        </div>
+
+        <div class="review-textarea-wrap">
+          <textarea id="reviewTextInput" maxlength="1000" rows="4" placeholder="A breathtaking journey that feels just as personal as it does cosmic. The score, the scale, and the bond between characters stayed with me long after the credits." oninput="updateCharCount(this)">{{ user_review.review_text if user_review and user_review.review_text else '' }}</textarea>
+          <span class="char-count" id="reviewCharCount">1,000 character limit</span>
+        </div>
+
+        <label class="spoiler-checkbox-wrap">
+          <input type="checkbox" id="spoilerCheckbox" {% if user_review and user_review.contains_spoilers %}checked{% endif %}>
+          <span class="custom-check"></span>
+          <span class="check-text">This review contains spoilers</span>
+        </label>
+
+        <div class="feedback-submit-row">
+          <span class="public-notice">Visible to all users &amp; synced with partner analytics.</span>
+          <button class="btn btn-primary btn-save-feedback" onclick="submitUserReview({{ movie.id }})">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            Save rating &amp; review
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Community Public Reviews Feed Section -->
+  <section class="community-reviews-section" style="margin-top: 40px; padding: 28px; background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; backdrop-filter: blur(12px);">
+    <div class="community-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08);">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <h2 style="font-size: 22px; font-weight: 700; color: #FFFFFF; margin: 0;">Community Reviews &amp; Buzz</h2>
+          <span class="pill-badge pill-violet" id="communityReviewsCountBadge">{{ reviews|length if reviews else 0 }} Review{{ 's' if (reviews and reviews|length != 1) else '' }}</span>
+        </div>
+        <p style="font-size: 13px; color: #94A3B8; margin: 4px 0 0 0;">Synchronized live across CineMatch AI and Movie Analytics Dashboard</p>
+      </div>
+      <span style="font-size: 12px; color: #10B981; display: flex; align-items: center; gap: 6px;">
+        <span style="width: 8px; height: 8px; border-radius: 50%; background: #10B981; box-shadow: 0 0 8px #10B981;"></span> Live Cloud Synced
+      </span>
+    </div>
+
+    <div class="community-reviews-list" id="communityReviewsList" style="display: flex; flex-direction: column; gap: 16px;">
+      {% if reviews %}
+        {% for rev in reviews %}
+          <div class="community-review-card" style="padding: 18px 20px; background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; transition: transform 0.2s, border-color 0.2s;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #6366F1, #8B5CF6); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #FFFFFF;">
+                  {{ rev.author_name[:2]|upper if rev.author_name else 'AC' }}
+                </div>
+                <div>
+                  <div style="font-weight: 600; font-size: 15px; color: #FFFFFF;">{{ rev.author_name or 'Anonymous Cinephile' }}</div>
+                  <div style="font-size: 12px; color: #64748B;">{{ rev.created_at.strftime('%b %d, %Y') if rev.created_at else 'Recent' }}</div>
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                {% if rev.contains_spoilers %}
+                  <span style="font-size: 11px; padding: 2px 8px; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #FCA5A5; border-radius: 4px; font-weight: 600;">SPOILER</span>
+                {% endif %}
+                <span style="font-size: 14px; font-weight: 700; color: #F59E0B; background: rgba(245, 158, 11, 0.15); padding: 4px 10px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                  ★ {{ '%.1f'|format(rev.rating) }}/10
+                </span>
+              </div>
+            </div>
+            {% if rev.review_text %}
+              <p style="font-size: 14px; color: #E2E8F0; line-height: 1.6; margin: 0; white-space: pre-line;">{{ rev.review_text }}</p>
+            {% else %}
+              <p style="font-size: 13px; color: #94A3B8; font-style: italic; margin: 0;">Rated this title without written comments.</p>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <div id="noReviewsPrompt" style="padding: 32px; text-align: center; color: #94A3B8; font-size: 14px; border: 1px dashed rgba(255, 255, 255, 0.12); border-radius: 12px;">
+          <p style="margin: 0 0 8px 0; font-size: 15px; color: #FFFFFF;">No public reviews yet for this title.</p>
+          <span style="font-size: 13px; color: #64748B;">Be the first to share your thoughts above! Your review will be visible across the entire platform and in partner analytics.</span>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+</div>
+
+<!-- Trailer Modal -->
+<div id="trailerModal" class="modal-backdrop hidden">
+  <div class="trailer-modal-content">
+    <div class="trailer-modal-header">
+      <h3 id="trailerModalTitle" class="trailer-modal-title">Movie Trailer</h3>
+      <div class="trailer-header-actions">
+        <a id="trailerExternalLink" href="#" target="_blank" rel="noopener" class="trailer-ext-btn">
+          Watch on YouTube ↗
+        </a>
+        <button class="modal-close-btn" onclick="closeTrailerModal()">&times;</button>
+      </div>
+    </div>
+    <div class="video-container">
+      <iframe id="trailerIframe" width="100%" height="100%" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+{% endblock %}
