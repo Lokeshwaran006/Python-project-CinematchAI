@@ -1,5 +1,12 @@
 # 🎬 CineMatch AI — Movie Recommendation & Discovery System
 
+[![Python](https://img.shields.io/badge/Python-3.11%2B-blue.svg)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
+[![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-1.4%2B-F7931E.svg)](https://scikit-learn.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Supabase-4169E1.svg)](https://supabase.com/)
+[![Render](https://img.shields.io/badge/Render-Deployed%20Live-46E3B7.svg)](https://python-project-cinematchai.onrender.com)
+[![Status](https://img.shields.io/badge/Status-Active%20%26%20Production%20Ready-success.svg)]()
+
 > **Live Application URL:** [https://python-project-cinematchai.onrender.com](https://python-project-cinematchai.onrender.com)  
 > **Course:** Advanced Python Programming (Project Review)  
 > **Architecture:** Cloud-Native, Two-Tier Interconnected Web Architecture  
